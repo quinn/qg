@@ -16,7 +16,8 @@ before:
     - go generate ./...
 
 builds:
-  - env:
+  - binary: g
+    env:
       - CGO_ENABLED=0
     goos:
       - linux
@@ -45,4 +46,13 @@ changelog:
       - "^test:"
 
 brews:
-  - name: g
+  - github:
+      owner: quinn
+      name: g
+    folder: Formula
+    homepage: "https://github.com/quinn/g"
+    description: generator thing
+    test: |
+      system "#{bin}/g -help"
+    install: |
+      bin.install "g"
