@@ -35,6 +35,21 @@ func ext(filename string) (string, string) {
 	return parts[0], parts[1]
 }
 
+func gofmt(targetPath string) {
+	if strings.HasSuffix(targetPath, ".go") {
+		if _, err := exec.LookPath("gopls"); err != nil {
+			log.Println("gopls not found. Skipping imports and formatting.")
+		} else {
+			if err := exec.Command("gopls", "imports", "-w", targetPath); err != nil {
+				log.Fatalf("Error importing packages: %v", err)
+			}
+			if err := exec.Command("gopls", "format", "-w", targetPath); err != nil {
+				log.Fatalf("Error formatting file: %v", err)
+			}
+		}
+	}
+}
+
 type Config struct {
 	Version    string      `yaml:"version"`
 	Generators []Generator `yaml:"generators"`
@@ -42,8 +57,9 @@ type Config struct {
 
 // Generator represents each generator in the generators list
 type Generator struct {
-	Name string   `yaml:"name"`
-	Args []string `yaml:"args"`
+	Name      string              `yaml:"name"`
+	Args      []string            `yaml:"args"`
+	Transorms []map[string]string `yaml:"transforms"`
 }
 
 func main() {
@@ -124,6 +140,10 @@ func main() {
 	templateDir := path.Join(rootDir, ".g", gName, "tpl")
 	gConfigPath := path.Join(rootDir, ".g", gName, "config.js")
 
+	vm := goja.New()
+	if err := vm.Set("G_CONFIG_INPUT", gConfig); err != nil {
+		log.Fatalf("Error setting config input: %v", err)
+	}
 	// Read the config file
 	configData, err := os.ReadFile(gConfigPath)
 	if err != nil {
@@ -131,10 +151,6 @@ func main() {
 			log.Fatalf("Error reading config file: %v", err)
 		}
 	} else {
-		vm := goja.New()
-		if err := vm.Set("G_CONFIG_INPUT", gConfig); err != nil {
-			log.Fatalf("Error setting config input: %v", err)
-		}
 		if _, err := vm.RunString(string(configData)); err != nil {
 			log.Fatalf("Error running config file: %v", err)
 		}
@@ -144,6 +160,39 @@ func main() {
 		}
 		for k, v := range v.Export().(map[string]interface{}) {
 			gConfig[k] = v.(string)
+		}
+
+		if err := vm.Set("G_CONFIG", gConfig); err != nil {
+			log.Fatalf("Error setting config: %v", err)
+		}
+
+		if len(generator.Transorms) > 0 {
+			for _, transform := range generator.Transorms {
+				for jsFunction, sourceFile := range transform {
+					vm := goja.New()
+					if _, err := os.Stat(sourceFile); os.IsNotExist(err) {
+						log.Fatalf("Target file does not exist: %s", sourceFile)
+					}
+					sourceFileData, err := os.ReadFile(sourceFile)
+					if err != nil {
+						log.Fatalf("Error reading target file: %v", err)
+					}
+					if err := vm.Set("G_FILE_INPUT", string(sourceFileData)); err != nil {
+						log.Fatalf("Error setting file input: %v", err)
+					}
+					if _, err := vm.RunString(string(configData)); err != nil {
+						log.Fatalf("Error running config file: %v", err)
+					}
+					v, err := vm.RunString(jsFunction + "(G_FILE_INPUT, G_CONFIG)")
+					if err != nil {
+						log.Fatalf("Error running transform function: %v", err)
+					}
+					if err := os.WriteFile(sourceFile, []byte(v.String()), 0644); err != nil {
+						log.Fatalf("Error writing target file: %v", err)
+					}
+					gofmt(sourceFile)
+				}
+			}
 		}
 	}
 
@@ -205,18 +254,7 @@ func main() {
 			return fmt.Errorf("error executing template: %v", err)
 		}
 
-		if strings.HasSuffix(targetPath, ".go") {
-			if _, err := exec.LookPath("gopls"); err != nil {
-				log.Println("gopls not found. Skipping imports and formatting.")
-			} else {
-				if err := exec.Command("gopls", "imports", "-w", targetPath); err != nil {
-					log.Fatalf("Error importing packages: %v", err)
-				}
-				if err := exec.Command("gopls", "format", "-w", targetPath); err != nil {
-					log.Fatalf("Error formatting file: %v", err)
-				}
-			}
-		}
+		gofmt(targetPath)
 
 		return nil
 	}); err != nil {

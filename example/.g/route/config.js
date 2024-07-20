@@ -1,9 +1,16 @@
 /**
+ * @typedef {Object} ConfigObject
+ * @property {string} method
+ * @property {string} path
+ * @property {string} routeFilename
+ * @property {string} viewFilename
+ * @property {string} funcName */
+
+/**
  * @param {Object} options
  * @param {string} options.method
  * @param {string} options.path
- * @returns {Object}
- */
+ * @returns {ConfigObject} */
 function config({ method, path }) {
     method = method.toUpperCase()
 
@@ -28,4 +35,13 @@ function config({ method, path }) {
     }).join('')
 
     return { method, path, routeFilename, viewFilename, funcName }
+}
+
+
+/**
+ * @param {string} fileData
+ * @param {ConfigObject} config
+ * @returns {string} */
+function addRoute(fileData, config) {
+
 }

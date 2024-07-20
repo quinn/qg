@@ -5,4 +5,4 @@ generators:
       - method
       - path
     transform:
-      - internal/web/server.go
+      - addRoute: internal/web/server.go
