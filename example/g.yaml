@@ -6,3 +6,13 @@ generators:
       - path
     transform:
       - addRoute: internal/web/server.go
+
+  # - name: "query"
+  #   args:
+  #     - tableName
+  #     - operation
+  #     - returnType
+  #   ai_transform:
+  #     context_files:
+  #       - internal/db/query.sql
+  #     "based on our query.sql, add a new query for the table {tableName} with the operation {operation} and return type {returnType}":
