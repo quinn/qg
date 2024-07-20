@@ -48,7 +48,8 @@ changelog:
 brews:
   - repository:
       owner: quinn
-      name: g
+      name: homebrew-tap
+    directory: Formula
     homepage: "https://github.com/quinn/g"
     description: generator thing
     test: |
