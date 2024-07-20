@@ -46,10 +46,9 @@ changelog:
       - "^test:"
 
 brews:
-  - github:
+  - repository:
       owner: quinn
       name: g
-    folder: Formula
     homepage: "https://github.com/quinn/g"
     description: generator thing
     test: |
