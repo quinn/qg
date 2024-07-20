@@ -1,26 +1,26 @@
-class Mygobin < Formula
+class G < Formula
     desc "Description of your Go binary"
-    homepage "https://github.com/quinn/mygobin"
+    homepage "https://github.com/quinn/g"
     version "0.1.0"
   
     if OS.mac?
-      url "https://github.com/quinn/mygobin/releases/download/v0.1.0/mygobin-darwin-amd64"
+      url "https://github.com/quinn/g/releases/download/v0.1.0/g-darwin-amd64"
       sha256 "SHA256_SUM_OF_DARWIN_BINARY"
     elsif OS.linux?
-      url "https://github.com/quinn/mygobin/releases/download/v0.1.0/mygobin-linux-amd64"
+      url "https://github.com/quinn/g/releases/download/v0.1.0/g-linux-amd64"
       sha256 "SHA256_SUM_OF_LINUX_BINARY"
     end
   
     def install
       if OS.mac?
-        bin.install "mygobin-darwin-amd64" => "mygobin"
+        bin.install "g-darwin-amd64" => "g"
       elsif OS.linux?
-        bin.install "mygobin-linux-amd64" => "mygobin"
+        bin.install "g-linux-amd64" => "g"
       end
     end
   
     test do
-      system "#{bin}/mygobin", "--version"
+      system "#{bin}/g", "--version"
     end
   end
   
