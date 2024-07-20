@@ -10,7 +10,7 @@
             "request": "launch",
             "mode": "auto",
             "program": "${fileDirname}",
-            "args": ["-path", "test", "route", "get", "/posts/:id/edit"],
+            "args": ["-path", "example", "route", "get", "/posts/:id/edit"],
         }
     ]
 }

@@ -4,7 +4,7 @@ generators:
     args:
       - method
       - path
-    transform:
+    transforms:
       - addRoute: internal/web/server.go
 
   # - name: "query"

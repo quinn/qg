@@ -40,7 +40,10 @@ func gofmt(targetPath string) {
 		if _, err := exec.LookPath("gopls"); err != nil {
 			log.Println("gopls not found. Skipping imports and formatting.")
 		} else {
-			if err := exec.Command("gopls", "imports", "-w", targetPath).Run(); err != nil {
+			cmd := exec.Command("gopls", "imports", "-w", targetPath)
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+			if err := cmd.Run(); err != nil {
 				log.Fatalf("Error formatting imports: %v", err)
 			}
 			if err := exec.Command("gopls", "format", "-w", targetPath).Run(); err != nil {
@@ -163,17 +166,14 @@ func main() {
 		}
 
 		if err := vm.Set("G_CONFIG", gConfig); err != nil {
-			log.Fatalf("Error setting config: %v", err)
+			log.Fatalf("Error setting config in VM: %v", err)
 		}
 
 		if len(generator.Transorms) > 0 {
 			for _, transform := range generator.Transorms {
-				for jsFunction, sourceFile := range transform {
-					vm := goja.New()
-					if _, err := os.Stat(sourceFile); os.IsNotExist(err) {
-						log.Fatalf("Target file does not exist: %s", sourceFile)
-					}
-					sourceFileData, err := os.ReadFile(sourceFile)
+				for jsFunction, f := range transform {
+					sourcePath := path.Join(rootDir, f)
+					sourceFileData, err := os.ReadFile(sourcePath)
 					if err != nil {
 						log.Fatalf("Error reading target file: %v", err)
 					}
@@ -187,10 +187,10 @@ func main() {
 					if err != nil {
 						log.Fatalf("Error running transform function: %v", err)
 					}
-					if err := os.WriteFile(sourceFile, []byte(v.String()), 0644); err != nil {
+					if err := os.WriteFile(sourcePath, []byte(v.String()), 0644); err != nil {
 						log.Fatalf("Error writing target file: %v", err)
 					}
-					gofmt(sourceFile)
+					gofmt(sourcePath)
 				}
 			}
 		}

@@ -1,7 +1,7 @@
 package web
 
 import (
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo"
 	"github.com/quinn/g/example/internal/routes"
 )
 
@@ -10,6 +10,7 @@ func NewServer() *echo.Echo {
 
 	r := &routes.Routes{}
 
+	e.GET("/posts/:id/edit", r.PostsEdit)
 	/* insert new routes here */
 
 	return e

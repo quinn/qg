@@ -43,9 +43,14 @@ function config({ method, path }) {
  * @param {ConfigObject} config
  * @returns {string} */
 function addRoute(fileData, config) {
-    const out = ''
+    let out = ''
+    let alreadyAdded = false
     for (const line of fileData.split('\n')) {
-        if (line.endsWith('/* insert new routes here */')) {
+        if (line.includes(`e.${config.method}("${config.path}"`)) {
+            alreadyAdded = true
+        }
+
+        if (!alreadyAdded && line.endsWith('/* insert new routes here */')) {
             out += `e.${config.method}("${config.path}", r.${config.funcName})\n`
         }
         out += line + '\n'
