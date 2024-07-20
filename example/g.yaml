@@ -1,0 +1,8 @@
+version: "1"
+generators:
+  - name: "route"
+    args:
+      - method
+      - path
+    transform:
+      - internal/web/server.go
