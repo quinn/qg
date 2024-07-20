@@ -46,34 +46,7 @@ type Generator struct {
 	Args []string `yaml:"args"`
 }
 
-// var i *interp.Interpreter
-
-// func eval(code string) {
-// 	_, err := i.Eval(code)
-// 	if err != nil {
-// 		log.Fatalf("Error evaluating code: %v", err)
-// 	}
-// }
-
 func main() {
-	// i = interp.New(interp.Options{})
-	// i.Use(stdlib.Symbols)
-
-	// str := "hello!"
-	// strR := reflect.ValueOf(&str).Elem()
-	// strRR := reflect.ValueOf(&strR).Elem()
-	// i.Use(map[string]map[string]reflect.Value{
-	// 	"me/me": {
-	// 		"MyStr":  strR,
-	// 		"MyStrR": strRR,
-	// 	},
-	// })
-	// eval(`import "fmt"`)
-	// eval(`import "me"`)
-	// eval(`fmt.Println(me.MyStr)`)
-
-	// os.Exit(0)
-
 	var rootDir string
 
 	flag.StringVar(&rootDir, "path", ".", "Target directory. Contains .g dir.")
