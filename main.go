@@ -40,10 +40,10 @@ func gofmt(targetPath string) {
 		if _, err := exec.LookPath("gopls"); err != nil {
 			log.Println("gopls not found. Skipping imports and formatting.")
 		} else {
-			if err := exec.Command("gopls", "imports", "-w", targetPath); err != nil {
-				log.Fatalf("Error importing packages: %v", err)
+			if err := exec.Command("gopls", "imports", "-w", targetPath).Run(); err != nil {
+				log.Fatalf("Error formatting imports: %v", err)
 			}
-			if err := exec.Command("gopls", "format", "-w", targetPath); err != nil {
+			if err := exec.Command("gopls", "format", "-w", targetPath).Run(); err != nil {
 				log.Fatalf("Error formatting file: %v", err)
 			}
 		}
