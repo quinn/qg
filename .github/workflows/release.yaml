@@ -16,7 +16,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
-          go-version: "1.22.4"
+          go-version: "1.17"
 
       - name: Build binary
         run: |
@@ -27,19 +27,18 @@ jobs:
       - name: Calculate SHA256
         id: sha256
         run: |
-          echo "::set-output name=darwin::$(sha256sum dist/mygobin-darwin-amd64 | awk '{ print $1 }')"
-          echo "::set-output name=linux::$(sha256sum dist/mygobin-linux-amd64 | awk '{ print $1 }')"
+          echo "DARWIN_SHA256=$(sha256sum dist/mygobin-darwin-amd64 | awk '{ print $1 }')" >> $GITHUB_ENV
+          echo "LINUX_SHA256=$(sha256sum dist/mygobin-linux-amd64 | awk '{ print $1 }')" >> $GITHUB_ENV
 
       - name: Create Release
         id: create_release
-        uses: actions/create-release@v1
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            dist/mygobin-darwin-amd64
+            dist/mygobin-linux-amd64
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: ${{ github.ref }}
-          draft: false
-          prerelease: false
 
       - name: Upload Release Asset (Darwin)
         uses: actions/upload-release-asset@v1
@@ -63,12 +62,10 @@ jobs:
 
       - name: Update Homebrew Formula
         run: |
-          DARWIN_SHA256=${{ steps.sha256.outputs.darwin }}
-          LINUX_SHA256=${{ steps.sha256.outputs.linux }}
           sed -i "s|url \".*darwin.*\"|url \"https://github.com/quinn/mygobin/releases/download/${GITHUB_REF}/mygobin-darwin-amd64\"|" Formula/mygobin.rb
-          sed -i "s|sha256 \".*\"|sha256 \"${DARWIN_SHA256}\"|" Formula/mygobin.rb
+          sed -i "s|sha256 \".*\"|sha256 \"${{ env.DARWIN_SHA256 }}\"|" Formula/mygobin.rb
           sed -i "s|url \".*linux.*\"|url \"https://github.com/quinn/mygobin/releases/download/${GITHUB_REF}/mygobin-linux-amd64\"|" Formula/mygobin.rb
-          sed -i "s|sha256 \".*\"|sha256 \"${LINUX_SHA256}\"|" Formula/mygobin.rb
+          sed -i "s|sha256 \".*\"|sha256 \"${{ env.LINUX_SHA256 }}\"|" Formula/mygobin.rb
 
       - name: Commit and push formula update
         run: |
