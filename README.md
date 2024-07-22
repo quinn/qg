@@ -141,7 +141,9 @@ function myTransformFunction(fileContent, config) {
 
 To build the CLI tool, run:
 
+```sh
 go build -o g
+```
 
 ### Testing
 
