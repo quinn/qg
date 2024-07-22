@@ -36,8 +36,8 @@ unalias g
 g -path <target-directory> <generator-name> [args...]
 ```
 
-- -path: Specifies the target directory containing the .g directory.
-- <generator-name>: The name of the generator to run.
+- -path: Specifies the target directory containing the .g directory. Defaults to current directory.
+- generator-name: The name of the generator to run.
 - [args...]: Arguments required by the generator.
 
 ### Example
