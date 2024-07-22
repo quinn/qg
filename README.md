@@ -2,16 +2,13 @@ Sure, here's a comprehensive README.md for your Go CLI tool:
 
 # Code Generator CLI Tool
 
-This CLI tool is designed for code generation in Go, similar to the "rails g" command, but more general and flexible. It allows you to define templates and transformations in your project and generate code based on those definitions.
+`g` is a tool for code generation. It is inspired by [Giles Bowkett](https://gilesbowkett.com/)'s talk [Code Generation: The Safety Scissors of Metaprogramming](https://www.youtube.com/watch?v=HWeQYcAc-eM). It's also worth mentioning that his talk was inspired by [Rails](https://old.reddit.com/r/agedlikewine/comments/wky9ue/elon_musk_admitted_to_his_biographer_that_the/), which was arguably inspired by the book [Code Generation in Action](https://www.manning.com/books/code-generation-in-action).
 
 ## Features
 
 - Generates code based on templates.
-
 - Supports custom transformations using JavaScript.
-
 - Can be used to generate anything, however, automatically formats generated Go code using `gopls` if installed.
-
 - Customizable configuration through YAML and JavaScript.
 
 ## Installation
