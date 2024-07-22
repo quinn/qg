@@ -1,5 +1,3 @@
-Sure, here's a comprehensive README.md for your Go CLI tool:
-
 # Code Generator CLI Tool
 
 `g` is a tool for code generation. It is inspired by [Giles Bowkett](https://gilesbowkett.com/)'s talk [Code Generation: The Safety Scissors of Metaprogramming](https://www.youtube.com/watch?v=HWeQYcAc-eM). It's also worth mentioning that his talk was inspired by [Rails](https://old.reddit.com/r/agedlikewine/comments/wky9ue/elon_musk_admitted_to_his_biographer_that_the/), which was arguably inspired by the book [Code Generation in Action](https://www.manning.com/books/code-generation-in-action).
