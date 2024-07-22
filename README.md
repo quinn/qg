@@ -77,7 +77,7 @@ Each generator should have a corresponding directory under .g/<generator-name>/t
 
 ### JavaScript Configuration
 
-JavaScript files can be used to define transformations. The config.js file should define a config function that takes G_CONFIG_INPUT and returns additional configuration values.
+JavaScript config can be used to define additional k/v for templates. The config.js file should define a config function that takes cli arguments and returns additional configuration values.
 
 ```js
 function config(input) {
@@ -95,7 +95,8 @@ my-project/
 ├── .g/
 │ └── my-generator/
 │ ├── tpl/
-│ │ └── template.go.tpl
+│ │ ├── template.go.tpl
+│ │ └── [additionalKey].go.tpl
 │ └── config.js
 └── main.go
 ```
