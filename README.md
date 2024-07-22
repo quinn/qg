@@ -136,7 +136,7 @@ function myTransformFunction(fileContent, config) {
 }
 ```
 
-### Development
+## Development
 
 ### Build
 
