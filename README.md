@@ -62,7 +62,7 @@ transforms:
 
 ### Template Directory
 
-Each generator should have a corresponding directory under .g/<generator-name>/tpl containing the template files.
+Each generator should have a corresponding directory under `.g/<generator-name>/tpl` containing the template files.
 
 ### JavaScript Configuration
 
