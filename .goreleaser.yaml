@@ -16,7 +16,7 @@ before:
     - go generate ./...
 
 builds:
-  - binary: g
+  - binary: qg
     env:
       - CGO_ENABLED=0
     goos:
@@ -50,9 +50,9 @@ brews:
       owner: quinn
       name: homebrew-tap
     directory: Formula
-    homepage: "https://github.com/quinn/g"
+    homepage: "https://github.com/quinn/qg"
     description: generator thing
     test: |
-      system "#{bin}/g -help"
+      system "#{bin}/qg -help"
     install: |
-      bin.install "g"
+      bin.install "qg"

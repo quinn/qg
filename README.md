@@ -14,13 +14,7 @@
 On mac or linux, run:
 
 ```sh
-brew install quinn/tap/g
-```
-
-if you're using ohmyzsh, add to the bottom of your .zshrc:
-
-```sh
-unalias g
+brew install quinn/tap/qg
 ```
 
 ## Usage
@@ -28,7 +22,7 @@ unalias g
 ### Basic Command
 
 ```sh
-g -path <target-directory> <generator-name> [args...]
+qg -path <target-directory> <generator-name> [args...]
 ```
 
 - -path: Specifies the target directory containing the .g directory. Defaults to current directory.
@@ -38,7 +32,7 @@ g -path <target-directory> <generator-name> [args...]
 ### Example
 
 ```sh
-g my-generator arg1 arg2
+qg my-generator arg1 arg2
 ```
 
 ### Configuration
@@ -138,7 +132,7 @@ function myTransformFunction(fileContent, config) {
 To build the CLI tool, run:
 
 ```sh
-go build -o g
+go build -o qg
 ```
 
 ### Testing
