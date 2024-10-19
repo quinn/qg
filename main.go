@@ -206,6 +206,7 @@ func main() {
 			g := findGenerator(config, gName)
 
 			if ii == 0 {
+				// TODO: This code is duplicated.
 				for i, arg := range g.Args {
 					gConfig[arg] = args[i]
 				}
@@ -216,6 +217,11 @@ func main() {
 			}
 		}
 	} else {
+		// TODO: This code is duplicated.
+		for i, arg := range generator.Args {
+			gConfig[arg] = args[i]
+		}
+
 		runGenerator(rootDir, generator, gName, gConfig)
 	}
 }
@@ -295,29 +301,42 @@ func runGenerator(rootDir string, generator Generator, gName string, gConfig map
 
 	print("Config: %v\n", gConfig)
 
-	if err := filepath.WalkDir(templateDir, func(p string, d os.DirEntry, e error) error {
+	if err := filepath.WalkDir(templateDir, func(sourcePath string, d os.DirEntry, e error) error {
 		if e != nil {
 			return e
 		}
 		if d.IsDir() {
 			return nil
 		}
-		sourcePath := p
-		p = strings.Replace(p, templateDir+"/", "", 1)
-		print("Processing template: %s\n", p)
-		targetPathComponents := []string{rootDir}
-		strings.Split(p, "/")
-		for _, c := range strings.Split(p, "/") {
-			if strings.HasPrefix(c, "[") && strings.Contains(c, "]") {
-				fn, ext := ext(c)
-				c = strings.TrimSuffix(strings.TrimPrefix(fn, "["), "]")
-				c = gConfig[c]
-				c = c + "." + ext
+		templatePath := strings.Replace(sourcePath, templateDir+"/", "", 1)
+		print("Processing template: %s\n", templatePath)
+
+		// TODO: This could be replaced with go template by changing delims
+		var argName string
+		var brackets bool
+		var targetPath string
+		for _, char := range templatePath {
+			switch char {
+			case '[':
+				brackets = true
+			case ']':
+				brackets = false
+				targetPath += gConfig[argName]
+				argName = ""
+			default:
+				if brackets {
+					argName += string(char)
+				} else {
+					targetPath += string(char)
+				}
 			}
-			targetPathComponents = append(targetPathComponents, c)
 		}
 
-		targetPath := path.Join(targetPathComponents...)
+		if brackets {
+			log.Fatalf("unterminated open bracket: %s", templatePath)
+		}
+
+		targetPath = path.Join(rootDir, targetPath)
 		targetPath = strings.TrimSuffix(targetPath, ".tpl")
 		print("Source path: %s\n", sourcePath)
 		print("Target path: %s\n", targetPath)
