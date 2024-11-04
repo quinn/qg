@@ -6,6 +6,3 @@ generators:
       - path
     transforms:
       - addRoute: internal/web/server.go
-
-
-

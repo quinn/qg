@@ -277,8 +277,8 @@ func runGenerator(rootDir, outDir string, generator Generator, gName string, gCo
 		if err != nil {
 			log.Fatalf("Error running config function: %v", err)
 		}
-		for k, v := range v.Export().(map[string]interface{}) {
-			gConfig[k] = v.(string)
+		for k, v := range v.Export().(map[string]string) {
+			gConfig[k] = v
 		}
 
 		if err := vm.Set("G_CONFIG", gConfig); err != nil {
@@ -286,9 +286,10 @@ func runGenerator(rootDir, outDir string, generator Generator, gName string, gCo
 		}
 
 		if len(generator.Transforms) > 0 {
+			print("Running transforms.\n")
 			for _, transform := range generator.Transforms {
 				for jsFunction, f := range transform {
-					sourcePath := path.Join(rootDir, f)
+					sourcePath := path.Join(outDir, f)
 					sourceFileData, err := os.ReadFile(sourcePath)
 					if err != nil {
 						log.Fatalf("Error reading target file: %v", err)

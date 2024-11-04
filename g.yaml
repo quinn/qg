@@ -1,0 +1,8 @@
+version: "1"
+generators:
+  - name: init
+  - name: add
+    args:
+      - name
+    transforms:
+      - addGenerator: g.yaml
