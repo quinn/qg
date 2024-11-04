@@ -13,6 +13,8 @@ import (
 	"strings"
 
 	"github.com/dop251/goja"
+	"github.com/hay-kot/scaffold/app/scaffold/pkgs"
+	"go.quinn.io/g/appdirs"
 	"gopkg.in/yaml.v2"
 )
 
@@ -146,9 +148,11 @@ func findGenerator(config Config, gName string) (generator Generator) {
 }
 
 func main() {
-	var rootDir string
 
+	var rootDir string
 	flag.StringVar(&rootDir, "path", ".", "Target directory. Contains .g dir.")
+	var outDir string
+	flag.StringVar(&outDir, "out", ".", "Output directory.")
 
 	// Custom help message
 	flag.Usage = func() {
@@ -160,6 +164,13 @@ func main() {
 
 	flag.Parse()
 
+	resolver := pkgs.NewResolver(nil, appdirs.CacheDir(), ".")
+	ppath, err := resolver.Resolve(rootDir, nil, nil)
+	if err != nil {
+		log.Fatalf("Error resolving path: %v", err)
+	}
+
+	rootDir = ppath
 	configPath := path.Join(rootDir, "g.yaml")
 
 	// Read the YAML file
@@ -212,7 +223,7 @@ func main() {
 				}
 			}
 
-			for k, v := range runGenerator(rootDir, g, gName, gConfig) {
+			for k, v := range runGenerator(rootDir, outDir, g, gName, gConfig) {
 				gConfig[k] = v
 			}
 		}
@@ -222,11 +233,11 @@ func main() {
 			gConfig[arg] = args[i]
 		}
 
-		runGenerator(rootDir, generator, gName, gConfig)
+		runGenerator(rootDir, outDir, generator, gName, gConfig)
 	}
 }
 
-func runGenerator(rootDir string, generator Generator, gName string, gConfig map[string]string) map[string]string {
+func runGenerator(rootDir, outDir string, generator Generator, gName string, gConfig map[string]string) map[string]string {
 	print("Running generator: %s\n", generator.Name)
 	print("Args: %v\n", generator.Args)
 	print("Config: %v\n", gConfig)
@@ -336,7 +347,7 @@ func runGenerator(rootDir string, generator Generator, gName string, gConfig map
 			log.Fatalf("unterminated open bracket: %s", templatePath)
 		}
 
-		targetPath = path.Join(rootDir, targetPath)
+		targetPath = path.Join(outDir, targetPath)
 		targetPath = strings.TrimSuffix(targetPath, ".tpl")
 		print("Source path: %s\n", sourcePath)
 		print("Target path: %s\n", targetPath)
