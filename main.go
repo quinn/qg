@@ -115,8 +115,8 @@ func main() {
 		gConfig[arg] = args[i]
 	}
 
-	// Run the generator
-	if err := gen.Run(gName, gConfig); err != nil {
+	// Run the generator with resolver
+	if err := gen.Run(gName, gConfig, resolver); err != nil {
 		log.Fatal(err)
 	}
 }
