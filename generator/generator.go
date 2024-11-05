@@ -6,12 +6,13 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+	"text/template"
 
 	"go.quinn.io/g/config"
 	"go.quinn.io/g/fileops"
 	"go.quinn.io/g/jsvm"
 	"go.quinn.io/g/shell"
-	"go.quinn.io/g/template"
+	tpl "go.quinn.io/g/template"
 )
 
 // Generator handles the core generation logic
@@ -84,7 +85,7 @@ func (g *Generator) runGenerator(generator config.Generator, gName string, gConf
 	}
 
 	// Process templates
-	processor := template.New(templateDir, g.outDir)
+	processor := tpl.New(templateDir, g.outDir)
 	if err := filepath.WalkDir(templateDir, func(sourcePath string, d os.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -139,7 +140,11 @@ func (g *Generator) runGenerator(generator config.Generator, gName string, gConf
 	if len(generator.Post) > 0 {
 		runner := shell.New(g.outDir)
 		for _, post := range generator.Post {
-			tmpl := template.New("post", post)
+			tmpl, err := template.New("post").Parse(post)
+			if err != nil {
+				return fmt.Errorf("error parsing post command template: %w", err)
+			}
+
 			var cmd strings.Builder
 			if err := tmpl.Execute(&cmd, gConfig); err != nil {
 				return fmt.Errorf("error executing post command template: %w", err)
