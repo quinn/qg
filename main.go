@@ -1,21 +1,25 @@
 package main
 
 import (
+	"context"
 	_ "embed"
 	"flag"
 	"fmt"
-	"html/template"
 	"log"
 	"os"
 	"os/exec"
 	"path"
 	"path/filepath"
 	"strings"
+	"text/template"
 
 	"github.com/dop251/goja"
 	"github.com/hay-kot/scaffold/app/scaffold/pkgs"
+	"github.com/hay-kot/scaffold/app/scaffold/scaffoldrc"
 	"go.quinn.io/g/appdirs"
 	"gopkg.in/yaml.v2"
+	"mvdan.cc/sh/v3/interp"
+	"mvdan.cc/sh/v3/syntax"
 )
 
 //go:embed js/convertCase.js
@@ -53,13 +57,13 @@ func gofmt(targetPath string) {
 		if _, err := exec.LookPath("gopls"); err != nil {
 			log.Println("gopls not found. Skipping imports and formatting.")
 		} else {
-			cmd := exec.Command("gopls", "imports", "-w", targetPath)
+			cmd := exec.Command("goimports", "-w", targetPath)
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
 			if err := cmd.Run(); err != nil {
 				log.Fatalf("Error formatting imports: %v", err)
 			}
-			if err := exec.Command("gopls", "format", "-w", targetPath).Run(); err != nil {
+			if err := exec.Command("go", "fmt", targetPath).Run(); err != nil {
 				log.Fatalf("Error formatting file: %v", err)
 			}
 		}
@@ -116,6 +120,36 @@ func write(sourcePath, data string) {
 	}
 }
 
+func errShell(outDir, cmd string) error {
+	if os.Getenv("DRY_RUN") == "true" {
+		log.Println("DRY_RUN: running", cmd)
+		return nil
+	}
+
+	r, err := interp.New(
+		interp.Interactive(true),
+		interp.StdIO(os.Stdin, os.Stdout, os.Stderr),
+		interp.Dir(outDir),
+	)
+	if err != nil {
+		return err
+	}
+
+	prog, err := syntax.NewParser().Parse(strings.NewReader(cmd), "")
+	if err != nil {
+		return err
+	}
+	r.Reset()
+	ctx := context.Background()
+
+	print("Running shell command: %s\n", cmd)
+	return r.Run(ctx, prog)
+}
+
+func shell(outDir, cmd string) {
+	must(errShell(outDir, cmd))
+}
+
 type Config struct {
 	Version    string      `yaml:"version"`
 	Generators []Generator `yaml:"generators"`
@@ -127,6 +161,7 @@ type Generator struct {
 	Args       []string            `yaml:"args"`
 	Transforms []map[string]string `yaml:"transforms"`
 	Use        []string            `yaml:"use"`
+	Post       []string            `yaml:"post"`
 }
 
 // Iterate over the generators and execute the one that matches the command line arguments
@@ -148,11 +183,12 @@ func findGenerator(config Config, gName string) (generator Generator) {
 }
 
 func main() {
-
 	var rootDir string
 	flag.StringVar(&rootDir, "path", ".", "Target directory. Contains .g dir.")
 	var outDir string
 	flag.StringVar(&outDir, "out", ".", "Output directory.")
+	var new bool
+	flag.BoolVar(&new, "new", false, "Target a new dir for generation.")
 
 	// Custom help message
 	flag.Usage = func() {
@@ -164,8 +200,10 @@ func main() {
 
 	flag.Parse()
 
-	resolver := pkgs.NewResolver(nil, appdirs.CacheDir(), ".")
-	ppath, err := resolver.Resolve(rootDir, nil, nil)
+	resolver := pkgs.NewResolver(map[string]string{
+		"gh": "https://github.com",
+	}, appdirs.CacheDir(), ".")
+	ppath, err := resolver.Resolve(rootDir, nil, &scaffoldrc.ScaffoldRC{})
 	if err != nil {
 		log.Fatalf("Error resolving path: %v", err)
 	}
@@ -210,7 +248,9 @@ func main() {
 
 	args, gName := shift(args)
 	generator := findGenerator(config, gName)
-	gConfig := map[string]string{}
+	gConfig := map[string]string{
+		"outDir": outDir,
+	}
 
 	if len(generator.Use) > 0 {
 		for ii, gName := range generator.Use {
@@ -228,6 +268,9 @@ func main() {
 			}
 		}
 	} else {
+		if len(args) < len(generator.Args) {
+			log.Fatalf("Missing arguments: %v", generator.Args)
+		}
 		// TODO: This code is duplicated.
 		for i, arg := range generator.Args {
 			gConfig[arg] = args[i]
@@ -277,7 +320,20 @@ func runGenerator(rootDir, outDir string, generator Generator, gName string, gCo
 		if err != nil {
 			log.Fatalf("Error running config function: %v", err)
 		}
-		for k, v := range v.Export().(map[string]string) {
+
+		smap, ok := v.Export().(map[string]string)
+		if !ok {
+			imap, ok := v.Export().(map[string]interface{})
+			if !ok {
+				log.Fatalf("Error exporting config: %v", v.Export())
+			}
+			smap = map[string]string{}
+			for k, v := range imap {
+				smap[k] = v.(string)
+			}
+		}
+
+		for k, v := range smap {
 			gConfig[k] = v
 		}
 
@@ -314,6 +370,7 @@ func runGenerator(rootDir, outDir string, generator Generator, gName string, gCo
 	print("Config: %v\n", gConfig)
 
 	if err := filepath.WalkDir(templateDir, func(sourcePath string, d os.DirEntry, e error) error {
+		print("Walking: %s\n", sourcePath)
 		if e != nil {
 			return e
 		}
@@ -353,12 +410,14 @@ func runGenerator(rootDir, outDir string, generator Generator, gName string, gCo
 		print("Source path: %s\n", sourcePath)
 		print("Target path: %s\n", targetPath)
 
+		print("Creating template.\n")
 		// Read the template file
 		tmplData, err := os.ReadFile(sourcePath)
 		if err != nil {
 			return fmt.Errorf("error reading template file: %v", err)
 		}
 
+		print("Parsing template.\n")
 		// Create and execute the template
 		tmpl, err := template.New("file").Parse(string(tmplData))
 		if err != nil {
@@ -366,13 +425,33 @@ func runGenerator(rootDir, outDir string, generator Generator, gName string, gCo
 		}
 
 		// Create the target directory if it does not exist
+		print("Making directory: %s\n", targetPath)
 		mkdirp(targetPath)
+		print("Executing template.\n")
 		execTpl(tmpl, targetPath, gConfig)
+		print("running gofmt.\n")
 		gofmt(targetPath)
 
 		return nil
 	}); err != nil {
 		log.Fatalf("Error walking directory: %v", err)
+	}
+
+	if len(generator.Post) > 0 {
+		for _, post := range generator.Post {
+			tmpl, err := template.New("file").Parse(post)
+			if err != nil {
+				log.Fatalf("error parsing template file: %v", err)
+			}
+
+			// exec the template against gConfig
+			writeStr := strings.Builder{}
+			if err := tmpl.Execute(&writeStr, gConfig); err != nil {
+				log.Fatalf("error executing template: %v", err)
+			}
+
+			shell(outDir, writeStr.String())
+		}
 	}
 
 	return gConfig
