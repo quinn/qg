@@ -203,7 +203,7 @@ func main() {
 	resolver := pkgs.NewResolver(map[string]string{
 		"gh": "https://github.com",
 	}, appdirs.CacheDir(), ".")
-	ppath, err := resolver.Resolve(rootDir, nil, &scaffoldrc.ScaffoldRC{})
+	ppath, err := resolver.Resolve(rootDir, []string{rootDir}, &scaffoldrc.ScaffoldRC{})
 	if err != nil {
 		log.Fatalf("Error resolving path: %v", err)
 	}

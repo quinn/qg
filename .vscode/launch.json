@@ -20,6 +20,18 @@
                 "get",
                 "/posts/:id/remote-test"
             ]
+        },
+        {
+            "name": "Empty Path Arg",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${fileDirname}",
+            // "args": ["-path", "example", "route", "get", "/posts/:id/edit"],
+            "args": [
+                "-path",
+                "."
+            ]
         }
     ]
 }
