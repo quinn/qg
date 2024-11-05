@@ -5,10 +5,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/hay-kot/scaffold/app/scaffold/scaffoldrc"
+	"github.com/hay-kot/scaffold/app/scaffold/pkgs"
 )
 
-// mockResolver implements a simple resolver for testing
+// mockResolver implements the PathResolver interface for testing
 type mockResolver struct {
 	rootDir string
 }
@@ -17,7 +17,8 @@ func newMockResolver(rootDir string) *mockResolver {
 	return &mockResolver{rootDir: rootDir}
 }
 
-func (r *mockResolver) Resolve(path string, searchPaths []string, rc *scaffoldrc.ScaffoldRC) (string, error) {
+// Resolve implements the PathResolver interface
+func (r *mockResolver) Resolve(path string, searchPaths []string, rc pkgs.AuthProvider) (string, error) {
 	// For testing, just return the path relative to rootDir
 	return filepath.Join(r.rootDir, path), nil
 }
@@ -29,7 +30,6 @@ func TestGenerator_Run(t *testing.T) {
 	outDir := filepath.Join(tmpDir, "out")
 
 	// Create test directory structure
-	must(t, os.MkdirAll(filepath.Join(rootDir, ".g", "test-gen", "tpl"), 0755))
 
 	// Create test config
 	configYaml := `

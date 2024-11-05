@@ -5,13 +5,14 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/hay-kot/scaffold/app/scaffold/pkgs"
 	"gopkg.in/yaml.v2"
 )
 
 // PathResolver is an interface for resolving paths
 type PathResolver interface {
 	// Resolve resolves a path to its absolute location
-	Resolve(path string, searchPaths []string, rc interface{}) (string, error)
+	Resolve(path string, searchPaths []string, rc pkgs.AuthProvider) (string, error)
 }
 
 // Config represents the main configuration structure
@@ -50,11 +51,15 @@ func ParseConfig(data []byte, basePath string, resolver PathResolver) (*Config, 
 	}
 
 	// Load included configs
+	if err := config.loadIncludedConfigs(basePath, resolver); err != nil {
+		return nil, fmt.Errorf("error loading included configs: %w", err)
+	}
+
 	return &config, nil
 }
 
 // loadIncludedConfigs loads and merges configs from the Include section
-func (c *Config) loadIncludedConfigs(basePath string, resolver *pkgs.Resolver) error {
+func (c *Config) loadIncludedConfigs(basePath string, resolver PathResolver) error {
 	if len(c.Include) == 0 {
 		return nil
 	}
@@ -69,7 +74,7 @@ func (c *Config) loadIncludedConfigs(basePath string, resolver *pkgs.Resolver) e
 	// Process each included config
 	for namespace, includePath := range c.Include {
 		// Use the resolver to get the actual path of the included config
-		resolvedPath, err := resolver.Resolve(includePath, []string{basePath}, &scaffoldrc.ScaffoldRC{})
+		resolvedPath, err := resolver.Resolve(includePath, []string{basePath}, nil)
 		if err != nil {
 			return fmt.Errorf("error resolving include path %s: %w", includePath, err)
 		}
