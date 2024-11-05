@@ -31,17 +31,17 @@ func New(rootDir, outDir, jsConverter string) *Generator {
 	}
 }
 
+// func (g *Generator) Run(generators []config.Generator, gName string, gConfig map[string]string) error {
+// 	generator, err := config.FindGenerator(generators, gName)
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	return g.RunGenerator(*generator, gName, gConfig)
+// }
+
 // Run executes the generator with the given name and configuration
-func (g *Generator) Run(generators []config.Generator, gName string, gConfig map[string]string) error {
-	generator, err := config.FindGenerator(generators, gName)
-	if err != nil {
-		return err
-	}
-
-	return g.runGenerator(*generator, gName, gConfig)
-}
-
-func (g *Generator) runGenerator(generator config.Generator, gName string, gConfig map[string]string) error {
+func (g *Generator) RunGenerator(generator config.Generator, gName string, gConfig map[string]string) error {
 	fileops.Print("Running generator: %s\n", generator.Name)
 	fileops.Print("Args: %v\n", generator.Args)
 	fileops.Print("Config: %v\n", gConfig)

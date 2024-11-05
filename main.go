@@ -82,23 +82,27 @@ func main() {
 		"outDir": outDir,
 	}
 
-	// Find the generator and validate arguments
-	generator, err := config.FindGenerator(generators, gName)
+	// Find the configG and validate arguments
+	configG, err := config.FindGenerator(generators, gName)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	if len(args) < len(generator.Args) {
-		log.Fatalf("Missing arguments: %v", generator.Args)
+	if len(args) < len(configG.Args) {
+		log.Fatalf("Missing arguments: %v", configG.Args)
 	}
 
 	// Set up generator config from arguments
-	for i, arg := range generator.Args {
+	for i, arg := range configG.Args {
 		gConfig[arg] = args[i]
 	}
 
 	// Run the generator with resolver
-	if err := gen.Run(generators, gName, gConfig); err != nil {
+	// if err := gen.Run(generators, gName, gConfig); err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	if err := gen.RunGenerator(*configG, gName, gConfig); err != nil {
 		log.Fatal(err)
 	}
 }
