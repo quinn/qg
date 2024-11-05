@@ -1,6 +1,10 @@
 package config
 
-import "fmt"
+import (
+	"fmt"
+
+	"gopkg.in/yaml.v2"
+)
 
 // Config represents the main configuration structure
 type Config struct {
@@ -25,4 +29,13 @@ func (c Config) FindGenerator(gName string) (Generator, error) {
 		}
 	}
 	return Generator{}, fmt.Errorf("generator not found: %s", gName)
+}
+
+// ParseConfig parses YAML data into a Config struct
+func ParseConfig(data []byte) (*Config, error) {
+	var config Config
+	if err := yaml.Unmarshal(data, &config); err != nil {
+		return nil, fmt.Errorf("error unmarshalling YAML data: %w", err)
+	}
+	return &config, nil
 }
