@@ -112,9 +112,6 @@ func LoadIncludedConfigs(basePath string, include map[string]string) ([]Generato
 		}
 	}
 
-	// // Update the config's generators with all namespaced generators
-	// c.Generators = allGenerators
-
 	// return nil
 	return allGenerators, nil
 }
