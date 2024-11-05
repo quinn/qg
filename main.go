@@ -5,11 +5,7 @@ import (
 	"flag"
 	"log"
 	"os"
-	"path"
 
-	"github.com/hay-kot/scaffold/app/scaffold/pkgs"
-	"github.com/hay-kot/scaffold/app/scaffold/scaffoldrc"
-	"go.quinn.io/g/appdirs"
 	"go.quinn.io/g/config"
 	"go.quinn.io/g/fileops"
 	"go.quinn.io/g/generator"
@@ -43,25 +39,20 @@ func main() {
 
 	flag.Parse()
 
-	resolver := pkgs.NewResolver(map[string]string{
-		"gh": "https://github.com",
-	}, appdirs.CacheDir(), ".")
-	ppath, err := resolver.Resolve(rootDir, []string{rootDir}, &scaffoldrc.ScaffoldRC{})
-	if err != nil {
-		log.Fatalf("Error resolving path: %v", err)
-	}
+	// rootDir = ppath
+	// configPath := path.Join(rootDir, "g.yaml")
 
-	rootDir = ppath
-	configPath := path.Join(rootDir, "g.yaml")
-
-	// Read the YAML file
-	yamlData, err := os.ReadFile(configPath)
-	if err != nil {
-		log.Fatalf("Error reading YAML file: %v", err)
-	}
+	// // Read the YAML file
+	// yamlData, err := os.ReadFile(configPath)
+	// if err != nil {
+	// 	log.Fatalf("Error reading YAML file: %v", err)
+	// }
 
 	// Parse the configuration with base path and resolver for includes
-	cfg, err := config.ParseConfig(yamlData, rootDir, resolver)
+	generators, err := config.LoadIncludedConfigs(rootDir, map[string]string{
+		"": rootDir,
+	})
+	// cfg, err := config.ParseConfig(yamlData, rootDir, resolver)
 	if err != nil {
 		log.Fatalf("Error parsing config: %v", err)
 	}
@@ -70,11 +61,13 @@ func main() {
 
 	if len(args) == 0 {
 		fileops.Print("Available generators:\n")
-		for _, gen := range cfg.Generators {
+		for _, gen := range generators {
 			fileops.Print("* " + gen.Name)
 			var args []string
 			if len(gen.Use) > 0 {
-				g, err := cfg.FindGenerator(gen.Use[0])
+				for _, use := range
+				// g, err := cfg.FindGenerator(gen.Use[0])
+				for _, g := range generators {
 				if err != nil {
 					log.Fatalf("Error finding generator: %v", err)
 				}
@@ -116,7 +109,7 @@ func main() {
 	}
 
 	// Run the generator with resolver
-	if err := gen.Run(gName, gConfig, resolver); err != nil {
+	if err := gen.Run(gName, gConfig); err != nil {
 		log.Fatal(err)
 	}
 }

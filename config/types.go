@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/hay-kot/scaffold/app/scaffold/pkgs"
+	"go.quinn.io/g/appdirs"
 	"gopkg.in/yaml.v2"
 )
 
@@ -31,65 +32,65 @@ type Generator struct {
 	Post       []string            `yaml:"post"`
 }
 
-// FindGenerator returns the generator with the given name
-// For included configs, the name should be in the format "namespace:generator"
-func (c Config) FindGenerator(gName string) (Generator, error) {
-	// First check in the main config's generators
-	for _, g := range c.Generators {
-		if gName == g.Name {
-			return g, nil
-		}
-	}
-	return Generator{}, fmt.Errorf("generator not found: %s", gName)
-}
-
 // ParseConfig parses YAML data into a Config struct and recursively loads included configs
-func ParseConfig(data []byte, basePath string, resolver PathResolver) (*Config, error) {
+func ParseConfig(data []byte, basePath string) (*Config, error) {
 	var config Config
 	if err := yaml.Unmarshal(data, &config); err != nil {
 		return nil, fmt.Errorf("error unmarshalling YAML data: %w", err)
 	}
 
 	// Load included configs
-	if err := config.loadIncludedConfigs(basePath, resolver); err != nil {
-		return nil, fmt.Errorf("error loading included configs: %w", err)
+	if len(config.Include) != 0 {
+
+		// ppath, err := resolver.Resolve(rootDir, []string{rootDir}, &scaffoldrc.ScaffoldRC{})
+		// if err != nil {
+		// 	log.Fatalf("Error resolving path: %v", err)
+		// }
+
+		// Store original generators
+		// mainGenerators := config.Generators
+
+		// Create a slice to store all generators with their namespaces
+		// allGenerators := make([]Generator, 0)
+		// allGenerators = append(allGenerators, mainGenerators...)
+
+		generators, err := LoadIncludedConfigs(basePath, config.Include)
+		if err != nil {
+			return nil, fmt.Errorf("error loading included configs: %w", err)
+		}
+
+		config.Generators = append(config.Generators, generators...)
 	}
 
 	return &config, nil
 }
 
 // loadIncludedConfigs loads and merges configs from the Include section
-func (c *Config) loadIncludedConfigs(basePath string, resolver PathResolver) error {
-	if len(c.Include) == 0 {
-		return nil
-	}
-
-	// Store original generators
-	mainGenerators := c.Generators
-
-	// Create a slice to store all generators with their namespaces
-	allGenerators := make([]Generator, 0)
-	allGenerators = append(allGenerators, mainGenerators...)
-
+func LoadIncludedConfigs(basePath string, include map[string]string) ([]Generator, error) {
+	var allGenerators []Generator
 	// Process each included config
-	for namespace, includePath := range c.Include {
+	for namespace, includePath := range include {
+		resolver := pkgs.NewResolver(map[string]string{
+			"gh": "https://github.com",
+		}, appdirs.CacheDir(), ".")
+
 		// Use the resolver to get the actual path of the included config
 		resolvedPath, err := resolver.Resolve(includePath, []string{basePath}, nil)
 		if err != nil {
-			return fmt.Errorf("error resolving include path %s: %w", includePath, err)
+			return nil, fmt.Errorf("error resolving include path %s: %w", includePath, err)
 		}
 
 		// Read the included config file
 		configPath := filepath.Join(resolvedPath, "g.yaml")
 		data, err := os.ReadFile(configPath)
 		if err != nil {
-			return fmt.Errorf("error reading included config %s: %w", configPath, err)
+			return nil, fmt.Errorf("error reading included config %s: %w", configPath, err)
 		}
 
 		// Parse the included config, passing the resolver for nested includes
-		includedConfig, err := ParseConfig(data, resolvedPath, resolver)
+		includedConfig, err := ParseConfig(data, resolvedPath)
 		if err != nil {
-			return fmt.Errorf("error parsing included config %s: %w", configPath, err)
+			return nil, fmt.Errorf("error parsing included config %s: %w", configPath, err)
 		}
 
 		// Namespace the generators from the included config
@@ -100,8 +101,9 @@ func (c *Config) loadIncludedConfigs(basePath string, resolver PathResolver) err
 		}
 	}
 
-	// Update the config's generators with all namespaced generators
-	c.Generators = allGenerators
+	// // Update the config's generators with all namespaced generators
+	// c.Generators = allGenerators
 
-	return nil
+	// return nil
+	return allGenerators, nil
 }

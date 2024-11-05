@@ -32,7 +32,7 @@ func New(rootDir, outDir, jsConverter string) *Generator {
 }
 
 // Run executes the generator with the given name and configuration
-func (g *Generator) Run(gName string, gConfig map[string]string, resolver config.PathResolver) error {
+func (g *Generator) Run(gName string, gConfig map[string]string) error {
 	// Read and parse config
 	configPath := path.Join(g.rootDir, "g.yaml")
 	yamlData, err := os.ReadFile(configPath)
@@ -40,7 +40,7 @@ func (g *Generator) Run(gName string, gConfig map[string]string, resolver config
 		return fmt.Errorf("error reading YAML file: %w", err)
 	}
 
-	cfg, err := config.ParseConfig(yamlData, g.rootDir, resolver)
+	cfg, err := config.ParseConfig(yamlData, g.rootDir)
 	if err != nil {
 		return fmt.Errorf("error parsing config: %w", err)
 	}
