@@ -5,6 +5,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/hay-kot/scaffold/app/scaffold/pkgs"
+	"github.com/hay-kot/scaffold/app/scaffold/scaffoldrc"
 	"gopkg.in/yaml.v2"
 )
 
@@ -37,14 +39,14 @@ func (c Config) FindGenerator(gName string) (Generator, error) {
 }
 
 // ParseConfig parses YAML data into a Config struct and recursively loads included configs
-func ParseConfig(data []byte, basePath string) (*Config, error) {
+func ParseConfig(data []byte, basePath string, resolver *pkgs.Resolver) (*Config, error) {
 	var config Config
 	if err := yaml.Unmarshal(data, &config); err != nil {
 		return nil, fmt.Errorf("error unmarshalling YAML data: %w", err)
 	}
 
 	// Load included configs
-	if err := config.loadIncludedConfigs(basePath); err != nil {
+	if err := config.loadIncludedConfigs(basePath, resolver); err != nil {
 		return nil, fmt.Errorf("error loading included configs: %w", err)
 	}
 
@@ -52,7 +54,7 @@ func ParseConfig(data []byte, basePath string) (*Config, error) {
 }
 
 // loadIncludedConfigs loads and merges configs from the Include section
-func (c *Config) loadIncludedConfigs(basePath string) error {
+func (c *Config) loadIncludedConfigs(basePath string, resolver *pkgs.Resolver) error {
 	if len(c.Include) == 0 {
 		return nil
 	}
@@ -60,25 +62,29 @@ func (c *Config) loadIncludedConfigs(basePath string) error {
 	// Store original generators
 	mainGenerators := c.Generators
 
-	// Create a map to store all generators with their namespaces
+	// Create a slice to store all generators with their namespaces
 	allGenerators := make([]Generator, 0)
 	allGenerators = append(allGenerators, mainGenerators...)
 
 	// Process each included config
 	for namespace, includePath := range c.Include {
-		// Resolve the include path relative to the base config
-		fullPath := filepath.Join(basePath, includePath, "g.yaml")
-
-		// Read the included config file
-		data, err := os.ReadFile(fullPath)
+		// Use the resolver to get the actual path of the included config
+		resolvedPath, err := resolver.Resolve(includePath, []string{basePath}, &scaffoldrc.ScaffoldRC{})
 		if err != nil {
-			return fmt.Errorf("error reading included config %s: %w", fullPath, err)
+			return fmt.Errorf("error resolving include path %s: %w", includePath, err)
 		}
 
-		// Parse the included config
-		includedConfig, err := ParseConfig(data, filepath.Dir(fullPath))
+		// Read the included config file
+		configPath := filepath.Join(resolvedPath, "g.yaml")
+		data, err := os.ReadFile(configPath)
 		if err != nil {
-			return fmt.Errorf("error parsing included config %s: %w", fullPath, err)
+			return fmt.Errorf("error reading included config %s: %w", configPath, err)
+		}
+
+		// Parse the included config, passing the resolver for nested includes
+		includedConfig, err := ParseConfig(data, resolvedPath, resolver)
+		if err != nil {
+			return fmt.Errorf("error parsing included config %s: %w", configPath, err)
 		}
 
 		// Namespace the generators from the included config

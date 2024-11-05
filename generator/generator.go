@@ -8,6 +8,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/hay-kot/scaffold/app/scaffold/pkgs"
 	"go.quinn.io/g/config"
 	"go.quinn.io/g/fileops"
 	"go.quinn.io/g/jsvm"
@@ -32,7 +33,7 @@ func New(rootDir, outDir, jsConverter string) *Generator {
 }
 
 // Run executes the generator with the given name and configuration
-func (g *Generator) Run(gName string, gConfig map[string]string) error {
+func (g *Generator) Run(gName string, gConfig map[string]string, resolver *pkgs.Resolver) error {
 	// Read and parse config
 	configPath := path.Join(g.rootDir, "g.yaml")
 	yamlData, err := os.ReadFile(configPath)
@@ -40,7 +41,7 @@ func (g *Generator) Run(gName string, gConfig map[string]string) error {
 		return fmt.Errorf("error reading YAML file: %w", err)
 	}
 
-	cfg, err := config.ParseConfig(yamlData, g.rootDir)
+	cfg, err := config.ParseConfig(yamlData, g.rootDir, resolver)
 	if err != nil {
 		return fmt.Errorf("error parsing config: %w", err)
 	}

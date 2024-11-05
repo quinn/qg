@@ -60,8 +60,8 @@ func main() {
 		log.Fatalf("Error reading YAML file: %v", err)
 	}
 
-	// Parse the configuration with base path for resolving includes
-	cfg, err := config.ParseConfig(yamlData, rootDir)
+	// Parse the configuration with base path and resolver for includes
+	cfg, err := config.ParseConfig(yamlData, rootDir, resolver)
 	if err != nil {
 		log.Fatalf("Error parsing config: %v", err)
 	}
