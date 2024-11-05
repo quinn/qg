@@ -8,8 +8,9 @@ import (
 
 // Config represents the main configuration structure
 type Config struct {
-	Version    string      `yaml:"version"`
-	Generators []Generator `yaml:"generators"`
+	Version    string            `yaml:"version"`
+	Generators []Generator       `yaml:"generators"`
+	Include    map[string]string `yaml:"include"`
 }
 
 // Generator represents each generator in the generators list

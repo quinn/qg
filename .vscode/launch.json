@@ -10,10 +10,9 @@
             "request": "launch",
             "mode": "auto",
             "program": "${fileDirname}",
-            // "args": ["-path", "example", "route", "get", "/posts/:id/edit"],
             "args": [
                 "-path",
-                "https://github.com/quinn/g#example",
+                "example",
                 "-out",
                 "example",
                 "route",
@@ -27,7 +26,6 @@
             "request": "launch",
             "mode": "auto",
             "program": "${fileDirname}",
-            // "args": ["-path", "example", "route", "get", "/posts/:id/edit"],
             "args": [
                 "-path",
                 "."
