@@ -61,11 +61,14 @@ func LoadGenerators(basePath string, include map[string]string) ([]generator.Gen
 			}
 
 			if len(gen.Use) > 0 {
-				useCmd := gen.Use[0]
 				if namespace != "" {
-					useCmd = fmt.Sprintf("%s:%s", namespace, useCmd)
+					var use []string
+					for _, u := range gen.Use {
+						use = append(use, fmt.Sprintf("%s:%s", namespace, u))
+					}
+					gen.Use = use
 				}
-				g, err := generator.Find(allGenerators, useCmd)
+				g, err := generator.Find(allGenerators, gen.Use[0])
 				if err != nil {
 					log.Fatalf("Error finding generator: %v", err)
 				}
