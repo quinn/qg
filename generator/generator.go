@@ -40,7 +40,7 @@ func (g *Generator) Run(gName string, gConfig map[string]string) error {
 		return fmt.Errorf("error reading YAML file: %w", err)
 	}
 
-	cfg, err := config.ParseConfig(yamlData)
+	cfg, err := config.ParseConfig(yamlData, g.rootDir)
 	if err != nil {
 		return fmt.Errorf("error parsing config: %w", err)
 	}
