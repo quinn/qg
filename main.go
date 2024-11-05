@@ -40,7 +40,7 @@ func main() {
 	flag.Parse()
 
 	// Parse the configuration with base path and resolver for includes
-	generators, err := config.LoadIncludedConfigs(rootDir, map[string]string{
+	generators, err := config.LoadGenerators(rootDir, map[string]string{
 		"": rootDir,
 	})
 	// cfg, err := config.ParseConfig(yamlData, rootDir, resolver)

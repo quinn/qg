@@ -63,7 +63,7 @@ func ParseConfig(data []byte, basePath string) (*Config, error) {
 		// allGenerators := make([]Generator, 0)
 		// allGenerators = append(allGenerators, mainGenerators...)
 
-		generators, err := LoadIncludedConfigs(basePath, config.Include)
+		generators, err := LoadGenerators(basePath, config.Include)
 		if err != nil {
 			return nil, fmt.Errorf("error loading included configs: %w", err)
 		}
@@ -74,8 +74,8 @@ func ParseConfig(data []byte, basePath string) (*Config, error) {
 	return &config, nil
 }
 
-// loadIncludedConfigs loads and merges configs from the Include section
-func LoadIncludedConfigs(basePath string, include map[string]string) ([]Generator, error) {
+// loadGenerators loads and merges configs from the Include section
+func LoadGenerators(basePath string, include map[string]string) ([]Generator, error) {
 	var allGenerators []Generator
 	// Process each included config
 	for namespace, includePath := range include {
