@@ -1,11 +1,15 @@
 package jsvm
 
 import (
+	_ "embed"
 	"fmt"
 	"os"
 
 	"github.com/dop251/goja"
 )
+
+//go:embed js/convertCase.js
+var jsConvertCase string
 
 // VM wraps the JavaScript virtual machine functionality
 type VM struct {
@@ -28,9 +32,9 @@ func (v *VM) SetConfig(config map[string]string) error {
 }
 
 // RunConfigFile executes a JavaScript config file and returns the resulting configuration
-func (v *VM) RunConfigFile(configPath string, convertCaseJS string) (map[string]string, error) {
+func (v *VM) RunConfigFile(configPath string) (map[string]string, error) {
 	// Run the convertCase.js helper
-	if _, err := v.vm.RunString(convertCaseJS); err != nil {
+	if _, err := v.vm.RunString(jsConvertCase); err != nil {
 		return nil, fmt.Errorf("error running convertCase.js: %w", err)
 	}
 

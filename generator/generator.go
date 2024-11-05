@@ -17,17 +17,15 @@ import (
 
 // Generator handles the core generation logic
 type Generator struct {
-	rootDir     string
-	outDir      string
-	jsConverter string
+	rootDir string
+	Cfg     config.Generator
 }
 
 // New creates a new generator instance
-func New(rootDir, outDir, jsConverter string) *Generator {
-	return &Generator{
-		rootDir:     rootDir,
-		outDir:      outDir,
-		jsConverter: jsConverter,
+func New(cfg config.Generator, rootDir string) Generator {
+	return Generator{
+		rootDir: rootDir,
+		Cfg:     cfg,
 	}
 }
 
@@ -41,20 +39,20 @@ func New(rootDir, outDir, jsConverter string) *Generator {
 // }
 
 // Run executes the generator with the given name and configuration
-func (g *Generator) RunGenerator(generator config.Generator, gName string, gConfig map[string]string) error {
-	fileops.Print("Running generator: %s\n", generator.Name)
-	fileops.Print("Args: %v\n", generator.Args)
+func (g *Generator) RunGenerator(gConfig map[string]string, outDir string) error {
+	fileops.Print("Running generator: %s\n", g.Cfg.Name)
+	fileops.Print("Args: %v\n", g.Cfg.Args)
 	fileops.Print("Config: %v\n", gConfig)
 
 	// Validate required arguments
-	for _, arg := range generator.Args {
+	for _, arg := range g.Cfg.Args {
 		if gConfig[arg] == "" {
 			return fmt.Errorf("missing argument: %s", arg)
 		}
 	}
 
-	templateDir := path.Join(g.rootDir, ".g", gName, "tpl")
-	gConfigPath := path.Join(g.rootDir, ".g", gName, "config.js")
+	templateDir := path.Join(g.rootDir, ".g", g.Cfg.Name, "tpl")
+	gConfigPath := path.Join(g.rootDir, ".g", g.Cfg.Name, "config.js")
 
 	// Process JavaScript configuration
 	vm := jsvm.New()
@@ -62,7 +60,7 @@ func (g *Generator) RunGenerator(generator config.Generator, gName string, gConf
 		return err
 	}
 
-	jsConfig, err := vm.RunConfigFile(gConfigPath, g.jsConverter)
+	jsConfig, err := vm.RunConfigFile(gConfigPath)
 	if err != nil {
 		return err
 	}
@@ -73,7 +71,7 @@ func (g *Generator) RunGenerator(generator config.Generator, gName string, gConf
 	}
 
 	// Process templates
-	processor := tpl.New(templateDir, g.outDir)
+	processor := tpl.New(templateDir, outDir)
 	if err := filepath.WalkDir(templateDir, func(sourcePath string, d os.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -98,11 +96,11 @@ func (g *Generator) RunGenerator(generator config.Generator, gName string, gConf
 	}
 
 	// Process transforms
-	if len(generator.Transforms) > 0 {
+	if len(g.Cfg.Transforms) > 0 {
 		fileops.Print("Running transforms.\n")
-		for _, transform := range generator.Transforms {
+		for _, transform := range g.Cfg.Transforms {
 			for jsFunction, f := range transform {
-				sourcePath := path.Join(g.outDir, f)
+				sourcePath := path.Join(outDir, f)
 				sourceData, err := fileops.ReadFile(sourcePath)
 				if err != nil {
 					return err
@@ -125,9 +123,9 @@ func (g *Generator) RunGenerator(generator config.Generator, gName string, gConf
 	}
 
 	// Run post-generation commands
-	if len(generator.Post) > 0 {
-		runner := shell.New(g.outDir)
-		for _, post := range generator.Post {
+	if len(g.Cfg.Post) > 0 {
+		runner := shell.New(outDir)
+		for _, post := range g.Cfg.Post {
 			tmpl, err := template.New("post").Parse(post)
 			if err != nil {
 				return fmt.Errorf("error parsing post command template: %w", err)

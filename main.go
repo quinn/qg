@@ -6,13 +6,9 @@ import (
 	"log"
 	"os"
 
-	"go.quinn.io/g/config"
 	"go.quinn.io/g/fileops"
-	"go.quinn.io/g/generator"
+	"go.quinn.io/g/util"
 )
-
-//go:embed js/convertCase.js
-var jsConvertCase string
 
 func shift(slice []string) ([]string, string) {
 	if len(slice) == 0 {
@@ -40,7 +36,7 @@ func main() {
 	flag.Parse()
 
 	// Parse the configuration with base path and resolver for includes
-	generators, err := config.LoadGenerators(rootDir, map[string]string{
+	generators, err := util.LoadGenerators(rootDir, map[string]string{
 		"": rootDir,
 	})
 	// cfg, err := config.ParseConfig(yamlData, rootDir, resolver)
@@ -53,16 +49,16 @@ func main() {
 	if len(args) == 0 {
 		fileops.Print("Available generators:\n")
 		for _, gen := range generators {
-			fileops.Print("* " + gen.Name)
+			fileops.Print("* " + gen.Cfg.Name)
 			var args []string
-			if len(gen.Use) > 0 {
-				g, err := config.FindGenerator(generators, gen.Use[0])
+			if len(gen.Cfg.Use) > 0 {
+				g, err := util.FindGenerator(generators, gen.Cfg.Use[0])
 				if err != nil {
 					log.Fatalf("Error finding generator: %v", err)
 				}
-				args = g.Args
+				args = g.Cfg.Args
 			} else {
-				args = gen.Args
+				args = gen.Cfg.Args
 			}
 
 			if len(args) > 0 {
@@ -76,24 +72,24 @@ func main() {
 	}
 
 	args, gName := shift(args)
-	gen := generator.New(rootDir, outDir, jsConvertCase)
+	// gen := generator.New(rootDir, outDir, jsConvertCase)
 
 	gConfig := map[string]string{
 		"outDir": outDir,
 	}
 
 	// Find the configG and validate arguments
-	configG, err := config.FindGenerator(generators, gName)
+	gen, err := util.FindGenerator(generators, gName)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	if len(args) < len(configG.Args) {
-		log.Fatalf("Missing arguments: %v", configG.Args)
+	if len(args) < len(gen.Cfg.Args) {
+		log.Fatalf("Missing arguments: %v", gen.Cfg.Args)
 	}
 
 	// Set up generator config from arguments
-	for i, arg := range configG.Args {
+	for i, arg := range gen.Cfg.Args {
 		gConfig[arg] = args[i]
 	}
 
@@ -102,7 +98,7 @@ func main() {
 	// 	log.Fatal(err)
 	// }
 
-	if err := gen.RunGenerator(*configG, gName, gConfig); err != nil {
+	if err := gen.RunGenerator(gConfig, outDir); err != nil {
 		log.Fatal(err)
 	}
 }
