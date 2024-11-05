@@ -1,5 +1,7 @@
 package config
 
+import "fmt"
+
 // Config represents the main configuration structure
 type Config struct {
 	Version    string      `yaml:"version"`
