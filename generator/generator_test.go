@@ -30,6 +30,7 @@ func TestGenerator_Run(t *testing.T) {
 	outDir := filepath.Join(tmpDir, "out")
 
 	// Create test directory structure
+	must(t, os.MkdirAll(filepath.Join(rootDir, ".g", "test-gen", "tpl"), 0755))
 
 	// Create test config
 	configYaml := `

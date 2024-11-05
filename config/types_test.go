@@ -4,7 +4,24 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/hay-kot/scaffold/app/scaffold/pkgs"
 )
+
+// mockResolver implements the PathResolver interface for testing
+type mockResolver struct {
+	rootDir string
+}
+
+func newMockResolver(rootDir string) *mockResolver {
+	return &mockResolver{rootDir: rootDir}
+}
+
+// Resolve implements the PathResolver interface
+func (r *mockResolver) Resolve(path string, searchPaths []string, rc pkgs.AuthProvider) (string, error) {
+	// For testing, just return the path relative to rootDir
+	return filepath.Join(r.rootDir, path), nil
+}
 
 func TestConfig_FindGenerator(t *testing.T) {
 	tests := []struct {
@@ -112,8 +129,11 @@ include:
   ns: included
 `)
 
+	// Create resolver
+	resolver := newMockResolver(tmpDir)
+
 	// Test parsing config with includes
-	cfg, err := ParseConfig(mainConfig, tmpDir)
+	cfg, err := ParseConfig(mainConfig, tmpDir, resolver)
 	if err != nil {
 		t.Fatalf("ParseConfig() error = %v", err)
 	}
@@ -192,8 +212,11 @@ include:
   l1: level1
 `)
 
+	// Create resolver
+	resolver := newMockResolver(tmpDir)
+
 	// Test parsing config with recursive includes
-	cfg, err := ParseConfig(mainConfig, tmpDir)
+	cfg, err := ParseConfig(mainConfig, tmpDir, resolver)
 	if err != nil {
 		t.Fatalf("ParseConfig() error = %v", err)
 	}
