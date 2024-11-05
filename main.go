@@ -39,15 +39,6 @@ func main() {
 
 	flag.Parse()
 
-	// rootDir = ppath
-	// configPath := path.Join(rootDir, "g.yaml")
-
-	// // Read the YAML file
-	// yamlData, err := os.ReadFile(configPath)
-	// if err != nil {
-	// 	log.Fatalf("Error reading YAML file: %v", err)
-	// }
-
 	// Parse the configuration with base path and resolver for includes
 	generators, err := config.LoadIncludedConfigs(rootDir, map[string]string{
 		"": rootDir,
@@ -65,9 +56,7 @@ func main() {
 			fileops.Print("* " + gen.Name)
 			var args []string
 			if len(gen.Use) > 0 {
-				for _, use := range
-				// g, err := cfg.FindGenerator(gen.Use[0])
-				for _, g := range generators {
+				g, err := config.FindGenerator(generators, gen.Use[0])
 				if err != nil {
 					log.Fatalf("Error finding generator: %v", err)
 				}
@@ -94,7 +83,7 @@ func main() {
 	}
 
 	// Find the generator and validate arguments
-	generator, err := cfg.FindGenerator(gName)
+	generator, err := config.FindGenerator(generators, gName)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -109,7 +98,7 @@ func main() {
 	}
 
 	// Run the generator with resolver
-	if err := gen.Run(gName, gConfig); err != nil {
+	if err := gen.Run(generators, gName, gConfig); err != nil {
 		log.Fatal(err)
 	}
 }

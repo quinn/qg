@@ -32,6 +32,15 @@ type Generator struct {
 	Post       []string            `yaml:"post"`
 }
 
+func FindGenerator(generators []Generator, name string) (*Generator, error) {
+	for _, gen := range generators {
+		if gen.Name == name {
+			return &gen, nil
+		}
+	}
+	return nil, fmt.Errorf("generator not found: %s", name)
+}
+
 // ParseConfig parses YAML data into a Config struct and recursively loads included configs
 func ParseConfig(data []byte, basePath string) (*Config, error) {
 	var config Config
@@ -96,7 +105,9 @@ func LoadIncludedConfigs(basePath string, include map[string]string) ([]Generato
 		// Namespace the generators from the included config
 		for _, gen := range includedConfig.Generators {
 			// Prefix the generator name with the namespace
-			gen.Name = fmt.Sprintf("%s:%s", namespace, gen.Name)
+			if namespace != "" {
+				gen.Name = fmt.Sprintf("%s:%s", namespace, gen.Name)
+			}
 			allGenerators = append(allGenerators, gen)
 		}
 	}
