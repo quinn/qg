@@ -11,7 +11,7 @@ func TestMkdirP(t *testing.T) {
 	tmpDir := t.TempDir()
 	testPath := filepath.Join(tmpDir, "test", "nested", "dir")
 
-	if err := MkdirP(testPath); err != nil {
+	if err := MkdirP(testPath + "/file.txt"); err != nil {
 		t.Errorf("MkdirP() error = %v", err)
 	}
 

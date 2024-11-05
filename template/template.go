@@ -32,6 +32,9 @@ func (p *Processor) ProcessPath(templatePath string, config map[string]string) (
 	for _, char := range templatePath {
 		switch char {
 		case '[':
+			if brackets {
+				return "", fmt.Errorf("unterminated open bracket: %s", templatePath)
+			}
 			brackets = true
 		case ']':
 			if !brackets {
