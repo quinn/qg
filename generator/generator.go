@@ -18,7 +18,7 @@ import (
 // Generator handles the core generation logic
 type Generator struct {
 	rootDir string
-	cmd     string
+	Cmd     string
 	Cfg     config.Generator
 }
 
@@ -26,7 +26,7 @@ type Generator struct {
 func New(cfg config.Generator, cmd string, rootDir string) Generator {
 	return Generator{
 		rootDir: rootDir,
-		cmd:     cmd,
+		Cmd:     cmd,
 		Cfg:     cfg,
 	}
 }

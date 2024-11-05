@@ -50,7 +50,7 @@ func main() {
 	if len(args) == 0 {
 		fileops.Print("Available generators:\n")
 		for _, gen := range generators {
-			fileops.Print("* " + gen.Cfg.Name)
+			fileops.Print("* " + gen.Cmd)
 			var args []string
 			if len(gen.Cfg.Use) > 0 {
 				g, err := generator.Find(generators, gen.Cfg.Use[0])

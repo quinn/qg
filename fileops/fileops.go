@@ -40,7 +40,7 @@ func GoFmt(targetPath string) error {
 	}
 
 	if err := exec.Command("go", "fmt", targetPath).Run(); err != nil {
-		return fmt.Errorf("error formatting file: %w", err)
+		return fmt.Errorf("error formatting file (%s): %w", targetPath, err)
 	}
 
 	return nil

@@ -57,11 +57,11 @@ func LoadGenerators(basePath string, include map[string]string) ([]generator.Gen
 				// Prefix the generator name with the namespace
 				cmd = fmt.Sprintf("%s:%s", namespace, gen.Name)
 			}
-			gen := generator.New(gen, cmd, basePath)
+			gen := generator.New(gen, cmd, resolvedPath)
 			allGenerators = append(allGenerators, gen)
 		}
 
-		generators, err := LoadGenerators(basePath, cfg.Include)
+		generators, err := LoadGenerators(resolvedPath, cfg.Include)
 		if err != nil {
 			return nil, fmt.Errorf("error loading included configs: %w", err)
 		}
