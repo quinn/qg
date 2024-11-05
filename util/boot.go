@@ -12,44 +12,12 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-func FindGenerator(generators []generator.Generator, name string) (*generator.Generator, error) {
-	for _, gen := range generators {
-		if gen.Cfg.Name == name {
-			return &gen, nil
-		}
-	}
-	return nil, fmt.Errorf("generator not found: %s", name)
-}
-
 // ParseConfig parses YAML data into a Config struct and recursively loads included configs
 func ParseConfig(data []byte, basePath string) (*config.Config, error) {
 	var config config.Config
 	if err := yaml.Unmarshal(data, &config); err != nil {
 		return nil, fmt.Errorf("error unmarshalling YAML data: %w", err)
 	}
-
-	// Load included configs
-	// if len(config.Include) != 0 {
-
-	// 	// ppath, err := resolver.Resolve(rootDir, []string{rootDir}, &scaffoldrc.ScaffoldRC{})
-	// 	// if err != nil {
-	// 	// 	log.Fatalf("Error resolving path: %v", err)
-	// 	// }
-
-	// 	// Store original generators
-	// 	// mainGenerators := config.Generators
-
-	// 	// Create a slice to store all generators with their namespaces
-	// 	// allGenerators := make([]Generator, 0)
-	// 	// allGenerators = append(allGenerators, mainGenerators...)
-
-	// 	generators, err := LoadGenerators(basePath, config.Include)
-	// 	if err != nil {
-	// 		return nil, fmt.Errorf("error loading included configs: %w", err)
-	// 	}
-
-	// 	// config.Generators = append(config.Generators, generators...)
-	// }
 
 	return &config, nil
 }
@@ -84,11 +52,12 @@ func LoadGenerators(basePath string, include map[string]string) ([]generator.Gen
 
 		// Namespace the generators from the included config
 		for _, gen := range cfg.Generators {
-			// Prefix the generator name with the namespace
+			cmd := gen.Name
 			if namespace != "" {
-				gen.Name = fmt.Sprintf("%s:%s", namespace, gen.Name)
+				// Prefix the generator name with the namespace
+				cmd = fmt.Sprintf("%s:%s", namespace, gen.Name)
 			}
-			gen := generator.New(gen, basePath)
+			gen := generator.New(gen, cmd, basePath)
 			allGenerators = append(allGenerators, gen)
 		}
 

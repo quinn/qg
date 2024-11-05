@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"go.quinn.io/g/fileops"
+	"go.quinn.io/g/generator"
 	"go.quinn.io/g/util"
 )
 
@@ -52,7 +53,7 @@ func main() {
 			fileops.Print("* " + gen.Cfg.Name)
 			var args []string
 			if len(gen.Cfg.Use) > 0 {
-				g, err := util.FindGenerator(generators, gen.Cfg.Use[0])
+				g, err := generator.Find(generators, gen.Cfg.Use[0])
 				if err != nil {
 					log.Fatalf("Error finding generator: %v", err)
 				}
@@ -79,7 +80,7 @@ func main() {
 	}
 
 	// Find the configG and validate arguments
-	gen, err := util.FindGenerator(generators, gName)
+	gen, err := generator.Find(generators, gName)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -93,12 +94,7 @@ func main() {
 		gConfig[arg] = args[i]
 	}
 
-	// Run the generator with resolver
-	// if err := gen.Run(generators, gName, gConfig); err != nil {
-	// 	log.Fatal(err)
-	// }
-
-	if err := gen.RunGenerator(gConfig, outDir); err != nil {
+	if err := gen.Run(gConfig, outDir); err != nil {
 		log.Fatal(err)
 	}
 }

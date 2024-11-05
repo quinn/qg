@@ -18,28 +18,21 @@ import (
 // Generator handles the core generation logic
 type Generator struct {
 	rootDir string
+	cmd     string
 	Cfg     config.Generator
 }
 
 // New creates a new generator instance
-func New(cfg config.Generator, rootDir string) Generator {
+func New(cfg config.Generator, cmd string, rootDir string) Generator {
 	return Generator{
 		rootDir: rootDir,
+		cmd:     cmd,
 		Cfg:     cfg,
 	}
 }
 
-// func (g *Generator) Run(generators []config.Generator, gName string, gConfig map[string]string) error {
-// 	generator, err := config.FindGenerator(generators, gName)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	return g.RunGenerator(*generator, gName, gConfig)
-// }
-
 // Run executes the generator with the given name and configuration
-func (g *Generator) RunGenerator(gConfig map[string]string, outDir string) error {
+func (g *Generator) Run(gConfig map[string]string, outDir string) error {
 	fileops.Print("Running generator: %s\n", g.Cfg.Name)
 	fileops.Print("Args: %v\n", g.Cfg.Args)
 	fileops.Print("Config: %v\n", gConfig)
