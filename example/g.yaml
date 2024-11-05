@@ -1,8 +1,15 @@
 version: "1"
 generators:
-  - name: "route"
+  - name: route
     args:
       - method
       - path
     transforms:
       - addRoute: internal/web/server.go
+  - name: view
+    args:
+      - funcName
+  - name: action
+    use:
+      - route
+      - view

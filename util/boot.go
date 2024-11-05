@@ -2,6 +2,7 @@ package util
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 
@@ -25,6 +26,7 @@ func ParseConfig(data []byte, basePath string) (*config.Config, error) {
 // loadGenerators loads and merges configs from the Include section
 func LoadGenerators(basePath string, include map[string]string) ([]generator.Generator, error) {
 	var allGenerators []generator.Generator
+
 	// Process each included config
 	for namespace, includePath := range include {
 		resolver := pkgs.NewResolver(map[string]string{
@@ -57,6 +59,19 @@ func LoadGenerators(basePath string, include map[string]string) ([]generator.Gen
 				// Prefix the generator name with the namespace
 				cmd = fmt.Sprintf("%s:%s", namespace, gen.Name)
 			}
+
+			if len(gen.Use) > 0 {
+				useCmd := gen.Use[0]
+				if namespace != "" {
+					useCmd = fmt.Sprintf("%s:%s", namespace, useCmd)
+				}
+				g, err := generator.Find(allGenerators, useCmd)
+				if err != nil {
+					log.Fatalf("Error finding generator: %v", err)
+				}
+				gen.Args = g.Cfg.Args
+			}
+
 			gen := generator.New(gen, cmd, resolvedPath)
 			allGenerators = append(allGenerators, gen)
 		}
