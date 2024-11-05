@@ -5,10 +5,14 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/hay-kot/scaffold/app/scaffold/pkgs"
-	"github.com/hay-kot/scaffold/app/scaffold/scaffoldrc"
 	"gopkg.in/yaml.v2"
 )
+
+// PathResolver is an interface for resolving paths
+type PathResolver interface {
+	// Resolve resolves a path to its absolute location
+	Resolve(path string, searchPaths []string, rc interface{}) (string, error)
+}
 
 // Config represents the main configuration structure
 type Config struct {
@@ -39,17 +43,13 @@ func (c Config) FindGenerator(gName string) (Generator, error) {
 }
 
 // ParseConfig parses YAML data into a Config struct and recursively loads included configs
-func ParseConfig(data []byte, basePath string, resolver *pkgs.Resolver) (*Config, error) {
+func ParseConfig(data []byte, basePath string, resolver PathResolver) (*Config, error) {
 	var config Config
 	if err := yaml.Unmarshal(data, &config); err != nil {
 		return nil, fmt.Errorf("error unmarshalling YAML data: %w", err)
 	}
 
 	// Load included configs
-	if err := config.loadIncludedConfigs(basePath, resolver); err != nil {
-		return nil, fmt.Errorf("error loading included configs: %w", err)
-	}
-
 	return &config, nil
 }
 

@@ -4,7 +4,23 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/hay-kot/scaffold/app/scaffold/scaffoldrc"
 )
+
+// mockResolver implements a simple resolver for testing
+type mockResolver struct {
+	rootDir string
+}
+
+func newMockResolver(rootDir string) *mockResolver {
+	return &mockResolver{rootDir: rootDir}
+}
+
+func (r *mockResolver) Resolve(path string, searchPaths []string, rc *scaffoldrc.ScaffoldRC) (string, error) {
+	// For testing, just return the path relative to rootDir
+	return filepath.Join(r.rootDir, path), nil
+}
 
 func TestGenerator_Run(t *testing.T) {
 	// Create temporary test directory
@@ -33,11 +49,12 @@ generators:
 
 	// Create generator instance
 	g := New(rootDir, outDir, "")
+	resolver := newMockResolver(rootDir)
 
 	// Run generator
 	err := g.Run("test-gen", map[string]string{
 		"name": "World",
-	})
+	}, resolver)
 	if err != nil {
 		t.Errorf("Run() error = %v", err)
 	}
@@ -96,11 +113,12 @@ function transform(input, config) {
 
 	// Create generator instance
 	g := New(rootDir, outDir, "")
+	resolver := newMockResolver(rootDir)
 
 	// Run generator
 	err := g.Run("test-gen", map[string]string{
 		"name": "World",
-	})
+	}, resolver)
 	if err != nil {
 		t.Errorf("Run() error = %v", err)
 	}
@@ -145,11 +163,12 @@ generators:
 
 	// Create generator instance
 	g := New(rootDir, outDir, "")
+	resolver := newMockResolver(rootDir)
 
 	// Run generator
 	err := g.Run("test-gen", map[string]string{
 		"name": "test",
-	})
+	}, resolver)
 	if err != nil {
 		t.Errorf("Run() error = %v", err)
 	}
