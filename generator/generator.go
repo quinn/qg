@@ -32,15 +32,35 @@ func New(cfg config.Generator, cmd string, rootDir string) Generator {
 }
 
 // Run executes the generator with the given name and configuration
-func (g *Generator) Run(gConfig map[string]string, outDir string) error {
+func (g *Generator) Run(generators []Generator, gConfig map[string]string, outDir string) (map[string]string, error) {
 	fileops.Print("Running generator: %s\n", g.Cfg.Name)
 	fileops.Print("Args: %v\n", g.Cfg.Args)
 	fileops.Print("Config: %v\n", gConfig)
 
+	if len(g.Cfg.Use) > 0 {
+		for _, gName := range g.Cfg.Use {
+			g, err := Find(generators, gName)
+			if err != nil {
+				return nil, fmt.Errorf("[USE:%s] error finding generator: %w", gName, err)
+			}
+
+			gConfigRes, err := g.Run(generators, gConfig, outDir)
+			if err != nil {
+				return nil, fmt.Errorf("[USE:%s] error running generator : %w", gName, err)
+			}
+
+			for k, v := range gConfigRes {
+				gConfig[k] = v
+			}
+		}
+
+		return gConfig, nil
+	}
+
 	// Validate required arguments
 	for _, arg := range g.Cfg.Args {
 		if gConfig[arg] == "" {
-			return fmt.Errorf("missing argument: %s", arg)
+			return nil, fmt.Errorf("missing argument: %s", arg)
 		}
 	}
 
@@ -50,12 +70,12 @@ func (g *Generator) Run(gConfig map[string]string, outDir string) error {
 	// Process JavaScript configuration
 	vm := jsvm.New()
 	if err := vm.SetConfig(gConfig); err != nil {
-		return err
+		return nil, err
 	}
 
 	jsConfig, err := vm.RunConfigFile(gConfigPath)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Merge JavaScript config with existing config
@@ -85,7 +105,7 @@ func (g *Generator) Run(gConfig map[string]string, outDir string) error {
 
 		return fileops.GoFmt(targetPath)
 	}); err != nil {
-		return fmt.Errorf("error processing templates: %w", err)
+		return nil, fmt.Errorf("error processing templates: %w", err)
 	}
 
 	// Process transforms
@@ -96,20 +116,20 @@ func (g *Generator) Run(gConfig map[string]string, outDir string) error {
 				sourcePath := path.Join(outDir, f)
 				sourceData, err := fileops.ReadFile(sourcePath)
 				if err != nil {
-					return err
+					return nil, err
 				}
 
 				result, err := vm.RunTransform(jsFunction, sourceData, gConfig)
 				if err != nil {
-					return err
+					return nil, err
 				}
 
 				if err := fileops.WriteFile(sourcePath, result); err != nil {
-					return err
+					return nil, err
 				}
 
 				if err := fileops.GoFmt(sourcePath); err != nil {
-					return err
+					return nil, err
 				}
 			}
 		}
@@ -121,19 +141,19 @@ func (g *Generator) Run(gConfig map[string]string, outDir string) error {
 		for _, post := range g.Cfg.Post {
 			tmpl, err := template.New("post").Parse(post)
 			if err != nil {
-				return fmt.Errorf("error parsing post command template: %w", err)
+				return nil, fmt.Errorf("error parsing post command template: %w", err)
 			}
 
 			var cmd strings.Builder
 			if err := tmpl.Execute(&cmd, gConfig); err != nil {
-				return fmt.Errorf("error executing post command template: %w", err)
+				return nil, fmt.Errorf("error executing post command template: %w", err)
 			}
 
 			if err := runner.Run(cmd.String()); err != nil {
-				return fmt.Errorf("error running post command: %w", err)
+				return nil, fmt.Errorf("error running post command: %w", err)
 			}
 		}
 	}
 
-	return nil
+	return gConfig, nil
 }

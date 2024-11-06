@@ -85,7 +85,7 @@ func main() {
 		gConfig[arg] = args[i]
 	}
 
-	if err := gen.Run(gConfig, outDir); err != nil {
+	if _, err := gen.Run(generators, gConfig, outDir); err != nil {
 		log.Fatal(err)
 	}
 }
