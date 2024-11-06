@@ -116,7 +116,7 @@ func (g *Generator) Run(generators []Generator, gConfig map[string]string, outDi
 				sourcePath := path.Join(outDir, f)
 				sourceData, err := fileops.ReadFile(sourcePath)
 				if err != nil {
-					fileops.Print("Error reading file: %s\n. Will not perform transformation %s.\n original error: %v", sourcePath, jsFunction, err)
+					fileops.Print("Error reading file: %s\n. Will not perform transformation %s.\n original error: %v\n", sourcePath, jsFunction, err)
 					continue
 				}
 
