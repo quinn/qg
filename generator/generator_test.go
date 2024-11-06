@@ -5,23 +5,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/hay-kot/scaffold/app/scaffold/pkgs"
+	"go.quinn.io/g/config"
 )
-
-// mockResolver implements the PathResolver interface for testing
-type mockResolver struct {
-	rootDir string
-}
-
-func newMockResolver(rootDir string) *mockResolver {
-	return &mockResolver{rootDir: rootDir}
-}
-
-// Resolve implements the PathResolver interface
-func (r *mockResolver) Resolve(path string, searchPaths []string, rc pkgs.AuthProvider) (string, error) {
-	// For testing, just return the path relative to rootDir
-	return filepath.Join(r.rootDir, path), nil
-}
 
 func TestGenerator_Run(t *testing.T) {
 	// Create temporary test directory
@@ -32,30 +17,22 @@ func TestGenerator_Run(t *testing.T) {
 	// Create test directory structure
 	must(t, os.MkdirAll(filepath.Join(rootDir, ".g", "test-gen", "tpl"), 0755))
 
-	// Create test config
-	configYaml := `
-version: "1.0"
-generators:
-  - name: test-gen
-    args:
-      - name
-    transforms: []
-    post: []
-`
-	must(t, os.WriteFile(filepath.Join(rootDir, "g.yaml"), []byte(configYaml), 0644))
-
 	// Create test template
 	tplContent := "Hello {{.name}}!"
 	must(t, os.WriteFile(filepath.Join(rootDir, ".g", "test-gen", "tpl", "test.txt.tpl"), []byte(tplContent), 0644))
 
 	// Create generator instance
-	g := New(rootDir, outDir, "")
-	resolver := newMockResolver(rootDir)
+	cfg := config.Generator{
+		Name: "test-gen",
+		Args: []string{"name"},
+	}
+	g := New(cfg, "test-gen", rootDir)
 
 	// Run generator
-	err := g.Run("test-gen", map[string]string{
+	generators := []Generator{g}
+	_, err := g.Run(generators, map[string]string{
 		"name": "World",
-	}, resolver)
+	}, outDir)
 	if err != nil {
 		t.Errorf("Run() error = %v", err)
 	}
@@ -81,19 +58,6 @@ func TestGenerator_RunWithTransforms(t *testing.T) {
 	// Create test directory structure
 	must(t, os.MkdirAll(filepath.Join(rootDir, ".g", "test-gen", "tpl"), 0755))
 
-	// Create test config with transform
-	configYaml := `
-version: "1.0"
-generators:
-  - name: test-gen
-    args:
-      - name
-    transforms:
-      - transform: test.txt
-    post: []
-`
-	must(t, os.WriteFile(filepath.Join(rootDir, "g.yaml"), []byte(configYaml), 0644))
-
 	// Create test template
 	tplContent := "Hello {{.name}}!"
 	must(t, os.WriteFile(filepath.Join(rootDir, ".g", "test-gen", "tpl", "test.txt.tpl"), []byte(tplContent), 0644))
@@ -113,13 +77,20 @@ function transform(input, config) {
 	must(t, os.WriteFile(filepath.Join(rootDir, ".g", "test-gen", "config.js"), []byte(configJS), 0644))
 
 	// Create generator instance
-	g := New(rootDir, outDir, "")
-	resolver := newMockResolver(rootDir)
+	cfg := config.Generator{
+		Name: "test-gen",
+		Args: []string{"name"},
+		Transforms: []map[string]string{
+			{"transform": "test.txt"},
+		},
+	}
+	g := New(cfg, "test-gen", rootDir)
 
 	// Run generator
-	err := g.Run("test-gen", map[string]string{
+	generators := []Generator{g}
+	_, err := g.Run(generators, map[string]string{
 		"name": "World",
-	}, resolver)
+	}, outDir)
 	if err != nil {
 		t.Errorf("Run() error = %v", err)
 	}
@@ -145,31 +116,23 @@ func TestGenerator_RunWithPost(t *testing.T) {
 	// Create test directory structure
 	must(t, os.MkdirAll(filepath.Join(rootDir, ".g", "test-gen", "tpl"), 0755))
 
-	// Create test config with post command
-	configYaml := `
-version: "1.0"
-generators:
-  - name: test-gen
-    args:
-      - name
-    transforms: []
-    post:
-      - "touch {{.name}}.flag"
-`
-	must(t, os.WriteFile(filepath.Join(rootDir, "g.yaml"), []byte(configYaml), 0644))
-
 	// Create test template
 	tplContent := "Hello {{.name}}!"
 	must(t, os.WriteFile(filepath.Join(rootDir, ".g", "test-gen", "tpl", "test.txt.tpl"), []byte(tplContent), 0644))
 
 	// Create generator instance
-	g := New(rootDir, outDir, "")
-	resolver := newMockResolver(rootDir)
+	cfg := config.Generator{
+		Name: "test-gen",
+		Args: []string{"name"},
+		Post: []string{"touch {{.name}}.flag"},
+	}
+	g := New(cfg, "test-gen", rootDir)
 
 	// Run generator
-	err := g.Run("test-gen", map[string]string{
+	generators := []Generator{g}
+	_, err := g.Run(generators, map[string]string{
 		"name": "test",
-	}, resolver)
+	}, outDir)
 	if err != nil {
 		t.Errorf("Run() error = %v", err)
 	}

@@ -44,7 +44,7 @@ func TestVM_RunConfigFile(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	result, err := vm.RunConfigFile(configPath, "")
+	result, err := vm.RunConfigFile(configPath)
 	if err != nil {
 		t.Errorf("RunConfigFile() error = %v", err)
 	}
