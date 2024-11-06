@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/go-git/go-git/v5/plumbing/transport"
 	"github.com/hay-kot/scaffold/app/scaffold/pkgs"
 	"go.quinn.io/g/appdirs"
 	"go.quinn.io/g/config"
@@ -23,6 +24,12 @@ func ParseConfig(data []byte, basePath string) (*config.Config, error) {
 	return &config, nil
 }
 
+type FakeAuthorizer struct{}
+
+func (f *FakeAuthorizer) Authenticator(pkgurl string) (auth transport.AuthMethod, ok bool) {
+	return nil, false
+}
+
 // loadGenerators loads and merges configs from the Include section
 func LoadGenerators(basePath string, include map[string]string) ([]generator.Generator, error) {
 	var allGenerators []generator.Generator
@@ -34,7 +41,7 @@ func LoadGenerators(basePath string, include map[string]string) ([]generator.Gen
 		}, appdirs.CacheDir(), ".")
 
 		// Use the resolver to get the actual path of the included config
-		resolvedPath, err := resolver.Resolve(includePath, []string{basePath}, nil)
+		resolvedPath, err := resolver.Resolve(includePath, []string{basePath}, &FakeAuthorizer{})
 		if err != nil {
 			return nil, fmt.Errorf("error resolving include path %s: %w", includePath, err)
 		}

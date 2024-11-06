@@ -1,6 +1,4 @@
 version: "1"
-include:
-  ex: example
 generators:
   - name: init
   - name: add

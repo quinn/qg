@@ -6,6 +6,7 @@ toolchain go1.23.2
 
 require (
 	github.com/dop251/goja v0.0.0-20240707163329-b1681fb2a2f5
+	github.com/go-git/go-git/v5 v5.12.0
 	github.com/hay-kot/scaffold v0.5.0
 	github.com/rs/zerolog v1.33.0
 	gopkg.in/yaml.v2 v2.4.0
@@ -22,7 +23,6 @@ require (
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
 	github.com/go-git/go-billy/v5 v5.5.0 // indirect
-	github.com/go-git/go-git/v5 v5.12.0 // indirect
 	github.com/go-sourcemap/sourcemap v2.1.3+incompatible // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/google/pprof v0.0.0-20230207041349-798e818bf904 // indirect
