@@ -20,7 +20,7 @@ function config({ method, path }) {
     }
 
     const parts = rpath.split('/')
-    const routeFilename = parts.map((part) => {
+    let routeFilename = parts.map((part) => {
         if (part.startsWith(':')) {
             return part.replace(':', `$`)
         }
@@ -30,9 +30,16 @@ function config({ method, path }) {
 
     const viewFilename = parts.filter((part) => !part.startsWith(':')).join('-')
 
-    const funcName = parts.filter((part) => !part.startsWith(':')).map((part) => {
-        return part.charAt(0).toUpperCase() + part.slice(1)
+    let funcName = parts.filter((part) => !part.startsWith(':')).map((part) => {
+        return convertCase('pascal', part)
     }).join('')
+
+    switch (method) {
+        case 'POST':
+            funcName = funcName + 'Create'
+            routeFilename = routeFilename + 'POST'
+            break
+    }
 
     return { method, path, routeFilename, viewFilename, funcName }
 }
