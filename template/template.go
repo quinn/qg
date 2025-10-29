@@ -73,21 +73,25 @@ func (p *Processor) ProcessFile(sourcePath, targetPath string, config map[string
 		return fmt.Errorf("error reading template file: %w", err)
 	}
 
-	// Create and execute the template
-	tmpl, err := template.New("file").Parse(tmplData)
-	if err != nil {
-		return fmt.Errorf("error parsing template file: %w", err)
-	}
-
 	// Create the target directory if it does not exist
 	if err := fileops.MkdirP(targetPath); err != nil {
 		return fmt.Errorf("error creating target directory: %w", err)
 	}
 
-	// Execute the template to a string builder
 	var result strings.Builder
-	if err := tmpl.Execute(&result, config); err != nil {
-		return fmt.Errorf("error executing template: %w", err)
+	if strings.HasSuffix(sourcePath, ".tpl") {
+		// Create and execute the template
+		tmpl, err := template.New("file").Parse(tmplData)
+		if err != nil {
+			return fmt.Errorf("error parsing template file: %w", err)
+		}
+
+		// Execute the template to a string builder
+		if err := tmpl.Execute(&result, config); err != nil {
+			return fmt.Errorf("error executing template: %w", err)
+		}
+	} else {
+		result.WriteString(tmplData)
 	}
 
 	// Write the result to the target file
